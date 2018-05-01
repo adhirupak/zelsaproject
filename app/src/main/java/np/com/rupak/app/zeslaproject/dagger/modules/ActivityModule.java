@@ -5,6 +5,7 @@ import android.content.Context;
 
 import dagger.Module;
 import dagger.Provides;
+import np.com.rupak.app.zeslaproject.networking.WebSocketClient;
 
 
 /**
@@ -28,6 +29,11 @@ public class ActivityModule {
     @Provides
     Context providesContext() {
         return mActivity;
+    }
+
+    @Provides
+    WebSocketClient getWebSocketClient(){
+        return new WebSocketClient();
     }
 
 

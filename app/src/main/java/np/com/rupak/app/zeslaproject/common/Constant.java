@@ -5,4 +5,5 @@ package np.com.rupak.app.zeslaproject.common;
  */
 
 public class Constant {
+    public static final String BASE_URL="http://messenger.staging.zlesa.com?token=112";
 }

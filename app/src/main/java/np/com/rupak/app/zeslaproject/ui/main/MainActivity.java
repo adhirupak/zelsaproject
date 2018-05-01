@@ -1,33 +1,46 @@
 package np.com.rupak.app.zeslaproject.ui.main;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import np.com.rupak.app.zeslaproject.R;
+import javax.inject.Inject;
 
-public class MainActivity extends AppCompatActivity {
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import np.com.rupak.app.zeslaproject.R;
+import np.com.rupak.app.zeslaproject.common.Constant;
+import np.com.rupak.app.zeslaproject.networking.WebSocketClient;
+import np.com.rupak.app.zeslaproject.ui.base.BaseActivity;
+import okhttp3.OkHttpClient;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+
+public class MainActivity extends BaseActivity implements MainMvpView, WebSocketClient.WebSocketListener {
+
+    @Inject
+    MainActivityPresenter mPresenter;
+
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
+
+    @Inject
+    WebSocketClient webSocketClient;
+    private WebSocket webSocket;
+    private boolean isWebSocketConnected;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        ButterKnife.bind(this);
+        mPresenter.attachView(this);
         setSupportActionBar(toolbar);
+        webSocketClient.run(new OkHttpClient(), Constant.BASE_URL,this);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+
     }
 
     @Override
@@ -50,5 +63,45 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onOpen(WebSocket webSocket, Response response) {
+        this.webSocket = webSocket;
+        isWebSocketConnected = true;
+    }
+
+    @Override
+    public void onMessage(WebSocket webSocket, String text) {
+        mPresenter.handleMessage(text);
+
+    }
+
+    @Override
+    public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+      isWebSocketConnected = false;
+    }
+
+    @Override
+    public void onClosing(WebSocket webSocket, int code, String reason) {
+      //close all thing related to sockets
+
+    }
+
+    @Override
+    public void updateUI() {
+        /**
+         * Update UI from Here
+         * like recycle view for messages
+         */
+    }
+
+    @OnClick(R.id.btnSend)
+    public void onSendBtnClicked(){
+        if(webSocket != null || isWebSocketConnected ){
+            webSocket.send("text from edittext with other parameters converted into josn and send from here.");
+        }else{
+            //send error to user that socket connection failed.
+        }
     }
 }
